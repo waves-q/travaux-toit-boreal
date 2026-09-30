@@ -6,6 +6,7 @@ import { StepEstimate } from "@/components/estimator/step-estimate";
 import { StepContact } from "@/components/estimator/step-contact";
 import { StepConfirmation } from "@/components/estimator/step-confirmation";
 import type { ProjectType, Material, Slope } from "@/lib/calculate";
+import { IframeResizer } from "@/components/iframe-resizer";
 
 export type FormData = {
   projectType: ProjectType;
@@ -96,6 +97,7 @@ export function Estimator() {
 
   return (
     <>
+       <IframeResizer />
       {step === 1 && (
         <StepProject formData={formData} update={update} onNext={next} />
       )}
