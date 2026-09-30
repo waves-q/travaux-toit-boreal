@@ -3,6 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { getDb } from "@/lib/db";
 import { LeadsFilter } from "./leads-filter";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -117,7 +118,14 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
                   ) : (
                     leads.map((lead) => (
                       <TableRow key={lead.id}>
-                        <TableCell className="font-medium">{lead.fullName}</TableCell>
+                        <TableCell className="font-medium">
+                          <Link
+                            href={`/admin/leads/${lead.id}`}
+                            className="hover:underline"
+                          >
+                            {lead.fullName}
+                          </Link>
+                        </TableCell>
                         <TableCell>
                           <div className="text-sm">{lead.email}</div>
                           <div className="text-muted-foreground text-xs">{lead.phone}</div>
