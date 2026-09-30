@@ -1,7 +1,7 @@
-// app/api/leads/route.ts
 import { NextResponse } from "next/server";
 import { leadSchema } from "@/lib/schemas";
 import { calculateEstimate } from "@/lib/calculate";
+import { getDb } from "@/lib/db";
 
 export async function POST(request: Request) {
   // 1. Parse
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
   const data = parsed.data;
 
-  // 3. Recalcul serveur — on ne fait jamais confiance au client
+  // 3. Recalcul serveur
   const estimate = calculateEstimate({
     projectType: data.projectType,
     material: data.material,
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     submittedAt: new Date().toISOString(),
   };
 
-  // 4. Envoi au webhook (simule le CRM)
+  // 4. Webhook
   const webhookUrl = process.env.WEBHOOK_URL;
   if (!webhookUrl) {
     console.error("WEBHOOK_URL manquant dans les variables d'environnement");
@@ -60,7 +60,6 @@ export async function POST(request: Request) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(lead),
     });
-
     if (!webhookRes.ok) {
       throw new Error(`Webhook a répondu ${webhookRes.status}`);
     }
@@ -75,6 +74,26 @@ export async function POST(request: Request) {
     );
   }
 
-  // 5. Succès
+  // 5. Insertion en DB
+  try {
+    const sql = getDb();
+    await sql`
+      INSERT INTO leads (
+        full_name, email, phone, city, message,
+        project_type, material, area, slope, demolition,
+        subtotal, range_min, range_max, tps, tvq, total
+      ) VALUES (
+        ${data.fullName}, ${data.email}, ${data.phone}, ${data.city}, ${data.message},
+        ${data.projectType}, ${data.material}, ${data.area}, ${data.slope}, ${data.demolition},
+        ${estimate.subtotal}, ${estimate.rangeMin}, ${estimate.rangeMax},
+        ${estimate.tps}, ${estimate.tvq}, ${estimate.total}
+      )
+    `;
+  } catch (err) {
+    console.error("Erreur DB:", err);
+    // Le lead est déjà parti au CRM, on ne fait pas échouer la requête
+  }
+
+  // 6. Succès
   return NextResponse.json({ ok: true, estimate }, { status: 200 });
 }
