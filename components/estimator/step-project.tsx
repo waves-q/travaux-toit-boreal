@@ -1,20 +1,26 @@
 "use client";
 
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import type { FormData } from "@/components/estimator";
 
 type StepProjectProps = {
+  formData: FormData;
+  update: <K extends keyof FormData>(key: K, value: FormData[K]) => void;
   onNext: () => void;
 };
 
-export function StepProject({ onNext }: StepProjectProps) {
-  const [projectType, setProjectType] = useState("remplacement");
-
+export function StepProject({ formData, update, onNext }: StepProjectProps) {
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
@@ -29,8 +35,10 @@ export function StepProject({ onNext }: StepProjectProps) {
         <div className="space-y-3">
           <Label className="text-base font-semibold">Type de projet</Label>
           <RadioGroup
-            value={projectType}
-            onValueChange={setProjectType}
+            value={formData.projectType}
+            onValueChange={(v) =>
+              update("projectType", v as FormData["projectType"])
+            }
             className="flex flex-col gap-3 sm:flex-row"
           >
             <div className="flex flex-1 items-center gap-3 rounded-lg border p-3">
@@ -58,7 +66,8 @@ export function StepProject({ onNext }: StepProjectProps) {
         <div className="space-y-3">
           <Label className="text-base font-semibold">Matériau</Label>
           <RadioGroup
-            defaultValue="bardeaux"
+            value={formData.material}
+            onValueChange={(v) => update("material", v as FormData["material"])}
             className="flex flex-col gap-3 sm:flex-row"
           >
             <div className="flex flex-1 items-center gap-3 rounded-lg border p-3">
@@ -90,10 +99,10 @@ export function StepProject({ onNext }: StepProjectProps) {
           <Input
             id="superficie"
             type="number"
-            placeholder="Ex. : 1500"
             min={300}
             max={10000}
-            defaultValue={1500}
+            value={formData.area}
+            onChange={(e) => update("area", Number(e.target.value))}
           />
           <p className="text-muted-foreground text-xs">
             Entre 300 et 10 000 pi².
@@ -103,7 +112,11 @@ export function StepProject({ onNext }: StepProjectProps) {
         {/* Pente */}
         <div className="space-y-3">
           <Label className="text-base font-semibold">Pente du toit</Label>
-          <RadioGroup defaultValue="moyenne" className="flex flex-col gap-3 sm:flex-row">
+          <RadioGroup
+            value={formData.slope}
+            onValueChange={(v) => update("slope", v as FormData["slope"])}
+            className="flex flex-col gap-3 sm:flex-row"
+          >
             <div className="flex flex-1 items-center gap-3 rounded-lg border p-3">
               <RadioGroupItem value="faible" id="faible" />
               <Label htmlFor="faible" className="cursor-pointer font-normal">
@@ -125,10 +138,14 @@ export function StepProject({ onNext }: StepProjectProps) {
           </RadioGroup>
         </div>
 
-        {/* Démolition — visible seulement si remplacement complet */}
-        {projectType === "remplacement" && (
+        {/* Démolition — conditionnelle */}
+        {formData.projectType === "remplacement" && (
           <div className="flex items-start gap-3 rounded-lg border p-3">
-            <Checkbox id="demolition" />
+            <Checkbox
+              id="demolition"
+              checked={formData.demolition}
+              onCheckedChange={(v) => update("demolition", Boolean(v))}
+            />
             <div className="space-y-1">
               <Label htmlFor="demolition" className="cursor-pointer font-normal">
                 Démolition de l&apos;ancien toit
